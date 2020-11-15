@@ -82,10 +82,12 @@
       }
     },
     created() {
+      // 更新菜单
       if (this.isEdit) {
         getMenu(this.$route.query.id).then(response => {
           this.menu = response.data;
         });
+      // 添加菜单
       } else {
         this.menu = Object.assign({}, defaultMenu);
       }
@@ -94,7 +96,7 @@
     methods: {
       getSelectMenuList() {
         fetchList(0, {pageSize: 100, pageNum: 1}).then(response => {
-          this.selectMenuList = response.data.list;
+          this.selectMenuList = response.data.data;
           this.selectMenuList.unshift({id: 0, title: '无上级菜单'});
         });
       },
@@ -106,6 +108,7 @@
               cancelButtonText: '取消',
               type: 'warning'
             }).then(() => {
+              // 更新菜单
               if (this.isEdit) {
                 updateMenu(this.$route.query.id, this.menu).then(response => {
                   this.$message({
@@ -115,6 +118,7 @@
                   });
                   this.$router.back();
                 });
+              // 添加菜单
               } else {
                 createMenu(this.menu).then(response => {
                   this.$refs[formName].resetFields();

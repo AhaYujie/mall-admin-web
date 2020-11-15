@@ -21,7 +21,7 @@
       <div style="margin-top: 15px">
         <el-form :inline="true" :model="listQuery" size="small" label-width="140px">
           <el-form-item label="输入搜索：">
-            <el-input v-model="listQuery.keyword" class="input-width" placeholder="帐号/姓名" clearable></el-input>
+            <el-input v-model="listQuery.keyword" class="input-width" placeholder="用户名/昵称" clearable></el-input>
           </el-form-item>
         </el-form>
       </div>
@@ -39,10 +39,10 @@
         <el-table-column label="编号" width="100" align="center">
           <template slot-scope="scope">{{scope.row.id}}</template>
         </el-table-column>
-        <el-table-column label="帐号" align="center">
+        <el-table-column label="用户名" align="center">
           <template slot-scope="scope">{{scope.row.username}}</template>
         </el-table-column>
-        <el-table-column label="姓名" align="center">
+        <el-table-column label="昵称" align="center">
           <template slot-scope="scope">{{scope.row.nickName}}</template>
         </el-table-column>
         <el-table-column label="邮箱" align="center">
@@ -102,10 +102,10 @@
       <el-form :model="admin"
                ref="adminForm"
                label-width="150px" size="small">
-        <el-form-item label="帐号：">
+        <el-form-item label="用户名：">
           <el-input v-model="admin.username" style="width: 250px"></el-input>
         </el-form-item>
-        <el-form-item label="姓名：">
+        <el-form-item label="昵称：">
           <el-input v-model="admin.nickName" style="width: 250px"></el-input>
         </el-form-item>
         <el-form-item label="邮箱：">
@@ -152,7 +152,7 @@
   </div>
 </template>
 <script>
-  import {fetchList,createAdmin,updateAdmin,updateStatus,deleteAdmin,getRoleByAdmin,allocRole} from '@/api/login';
+  import {fetchList,searchList,createAdmin,updateAdmin,updateStatus,deleteAdmin,getRoleByAdmin,allocRole} from '@/api/login';
   import {fetchAllRoleList} from '@/api/role';
   import {formatDate} from '@/utils/date';
 
@@ -181,6 +181,7 @@
         dialogVisible: false,
         admin: Object.assign({}, defaultAdmin),
         isEdit: false,
+        editAdmin: null,
         allocDialogVisible: false,
         allocRoleIds:[],
         allRoleList:[],
@@ -189,7 +190,7 @@
     },
     created() {
       this.getList();
-      this.getAllRoleList();
+      this.getAllActiveRoleList();
     },
     filters: {
       formatDateTime(time) {
@@ -206,7 +207,17 @@
       },
       handleSearchList() {
         this.listQuery.pageNum = 1;
-        this.getList();
+        const keyword = this.listQuery.keyword;
+        if (keyword == null || keyword === '') {
+          this.getList()
+        } else {
+          this.listLoading = true;
+          searchList(this.listQuery).then(response => {
+            this.listLoading = false;
+            this.list = response.data.data;
+            this.total = response.data.total;
+          });
+        }
       },
       handleSizeChange(val) {
         this.listQuery.pageNum = 1;
@@ -260,6 +271,7 @@
       handleUpdate(index, row) {
         this.dialogVisible = true;
         this.isEdit = true;
+        this.editAdmin = row;
         this.admin = Object.assign({},row);
       },
       handleDialogConfirm() {
@@ -268,7 +280,12 @@
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
+          // 更新用户信息
           if (this.isEdit) {
+            // 密码相同说明不需要更新密码，否则更新密码会导致后台重新加密密码然后登录密码错误
+            if (this.editAdmin.password === this.admin.password) {
+              this.admin.password = null;
+            }
             updateAdmin(this.admin.id,this.admin).then(response => {
               this.$message({
                 message: '修改成功！',
@@ -277,6 +294,7 @@
               this.dialogVisible =false;
               this.getList();
             })
+          // 创建用户
           } else {
             createAdmin(this.admin).then(response => {
               this.$message({
@@ -310,27 +328,33 @@
       handleSelectRole(index,row){
         this.allocAdminId = row.id;
         this.allocDialogVisible = true;
+        this.allocRoleIds=[];
         this.getRoleListByAdmin(row.id);
       },
       getList() {
         this.listLoading = true;
         fetchList(this.listQuery).then(response => {
           this.listLoading = false;
-          this.list = response.data.list;
+          this.list = response.data.data;
           this.total = response.data.total;
         });
       },
-      getAllRoleList() {
+      getAllActiveRoleList() {
         fetchAllRoleList().then(response => {
-          this.allRoleList = response.data;
+          this.allRoleList = [];
+          for (let i = 0; i < response.data.length; i++) {
+            if (response.data[i].status === 1) {
+              this.allRoleList.push(response.data[i])
+            }
+          }
         });
       },
       getRoleListByAdmin(adminId) {
         getRoleByAdmin(adminId).then(response => {
           let allocRoleList = response.data;
           this.allocRoleIds=[];
-          if(allocRoleList!=null&&allocRoleList.length>0){
-            for(let i=0;i<allocRoleList.length;i++){
+          if(allocRoleList != null && allocRoleList.length > 0){
+            for(let i=0; i < allocRoleList.length; i++){
               this.allocRoleIds.push(allocRoleList[i].id);
             }
           }

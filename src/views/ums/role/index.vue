@@ -243,6 +243,7 @@
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
+          // 更新角色信息
           if (this.isEdit) {
             updateRole(this.role.id,this.role).then(response => {
               this.$message({
@@ -252,6 +253,7 @@
               this.dialogVisible =false;
               this.getList();
             })
+          // 添加角色
           } else {
             createRole(this.role).then(response => {
               this.$message({
@@ -274,7 +276,7 @@
         this.listLoading = true;
         fetchList(this.listQuery).then(response => {
           this.listLoading = false;
-          this.list = response.data.list;
+          this.list = response.data.data;
           this.total = response.data.total;
         });
       }

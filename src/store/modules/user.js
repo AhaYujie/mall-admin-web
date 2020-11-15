@@ -31,7 +31,7 @@ const user = {
       return new Promise((resolve, reject) => {
         login(username, userInfo.password).then(response => {
           const data = response.data
-          const tokenStr = data.tokenHead+data.token
+          const tokenStr = "Bearer " + data.accessToken
           setToken(tokenStr)
           commit('SET_TOKEN', tokenStr)
           resolve()
@@ -47,7 +47,11 @@ const user = {
         getInfo().then(response => {
           const data = response.data
           if (data.roles && data.roles.length > 0) { // 验证返回的roles是否是一个非空数组
-            commit('SET_ROLES', data.roles)
+            const roles = []
+            for (let i = 0; i < data.roles.length; i++) {
+              roles.push(data.roles[i].name)
+            }
+            commit('SET_ROLES', roles)
           } else {
             reject('getInfo: roles must be a non-null array !')
           }
@@ -63,14 +67,10 @@ const user = {
     // 登出
     LogOut({ commit, state }) {
       return new Promise((resolve, reject) => {
-        logout(state.token).then(() => {
-          commit('SET_TOKEN', '')
-          commit('SET_ROLES', [])
-          removeToken()
-          resolve()
-        }).catch(error => {
-          reject(error)
-        })
+        commit('SET_TOKEN', '')
+        commit('SET_ROLES', [])
+        removeToken()
+        resolve()
       })
     },
 

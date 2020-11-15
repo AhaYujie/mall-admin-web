@@ -40,6 +40,7 @@
     },
     methods: {
       treeList() {
+        console.log("treeList")
         fetchTreeList().then(response => {
           this.menuTreeList = response.data;
         });
@@ -47,11 +48,11 @@
       getRoleMenu(roleId){
         listMenuByRole(roleId).then(response=>{
           let menuList = response.data;
-          let checkedMenuIds=[];
-          if(menuList!=null&&menuList.length>0){
-            for(let i=0;i<menuList.length;i++){
+          let checkedMenuIds = [];
+          if (menuList != null && menuList.length > 0) {
+            for (let i = 0; i < menuList.length; i++) {
               let menu = menuList[i];
-              if(menu.parentId!==0){
+              if(menu.parentId !== 0){
                 checkedMenuIds.push(menu.id);
               }
             }
@@ -61,12 +62,12 @@
       },
       handleSave() {
         let checkedNodes = this.$refs.tree.getCheckedNodes();
-        let checkedMenuIds=new Set();
-        if(checkedNodes!=null&&checkedNodes.length>0){
+        let checkedMenuIds = new Set();
+        if(checkedNodes != null && checkedNodes.length > 0){
           for(let i=0;i<checkedNodes.length;i++){
             let checkedNode = checkedNodes[i];
             checkedMenuIds.add(checkedNode.id);
-            if(checkedNode.parentId!==0){
+            if(checkedNode.parentId !== 0){
               checkedMenuIds.add(checkedNode.parentId);
             }
           }

@@ -15,7 +15,7 @@
         <div style="margin-top: 15px">
           <el-form :inline="true" :model="listQuery" size="small" label-width="140px">
             <el-form-item label="输入搜索：">
-              <el-input style="width: 203px" v-model="listQuery.keyword" placeholder="品牌名称/关键字"></el-input>
+              <el-input clearable style="width: 203px" v-model="listQuery.keyword" placeholder="品牌名称/关键字"></el-input>
             </el-form-item>
           </el-form>
         </div>
@@ -41,11 +41,20 @@
         <el-table-column label="编号" width="100" align="center">
           <template slot-scope="scope">{{scope.row.id}}</template>
         </el-table-column>
+        <el-table-column label="品牌logo" width="120" align="center">
+          <template slot-scope="scope"><img style="height: 80px; width: 80px" :src="scope.row.logo"></template>
+        </el-table-column>
         <el-table-column label="品牌名称" align="center">
           <template slot-scope="scope">{{scope.row.name}}</template>
         </el-table-column>
         <el-table-column label="品牌首字母" width="100" align="center">
           <template slot-scope="scope">{{scope.row.firstLetter}}</template>
+        </el-table-column>
+        <el-table-column label="商品数量" width="100" align="center">
+          <template slot-scope="scope">{{scope.row.productCount}}</template>
+        </el-table-column>
+        <el-table-column label="评论数量" width="100" align="center">
+          <template slot-scope="scope">{{scope.row.productCommentCount}}</template>
         </el-table-column>
         <el-table-column label="排序" width="100" align="center">
           <template slot-scope="scope">{{scope.row.sort}}</template>
@@ -56,7 +65,7 @@
               @change="handleFactoryStatusChange(scope.$index, scope.row)"
               :active-value="1"
               :inactive-value="0"
-              v-model="scope.row.factoryStatus">
+              v-model="scope.row.isFactory">
             </el-switch>
           </template>
         </el-table-column>
@@ -66,24 +75,8 @@
               @change="handleShowStatusChange(scope.$index, scope.row)"
               :active-value="1"
               :inactive-value="0"
-              v-model="scope.row.showStatus">
+              v-model="scope.row.isShow">
             </el-switch>
-          </template>
-        </el-table-column>
-        <el-table-column label="相关" width="220" align="center">
-          <template slot-scope="scope">
-            <span>商品：</span>
-            <el-button
-              size="mini"
-              type="text"
-              @click="getProductList(scope.$index, scope.row)">100
-            </el-button>
-            <span>评价：</span>
-            <el-button
-              size="mini"
-              type="text"
-              @click="getProductCommentList(scope.$index, scope.row)">1000
-            </el-button>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="200" align="center">
@@ -136,7 +129,7 @@
   </div>
 </template>
 <script>
-  import {fetchList, updateShowStatus, updateFactoryStatus, deleteBrand} from '@/api/brand'
+  import {fetchList, search, updateShowStatus, updateFactoryStatus, deleteBrand} from '@/api/brand'
 
   export default {
     name: 'brandList',
@@ -154,7 +147,7 @@
         ],
         operateType: null,
         listQuery: {
-          keyword: null,
+          keyword: "",
           pageNum: 1,
           pageSize: 10
         },
@@ -170,9 +163,9 @@
     methods: {
       getList() {
         this.listLoading = true;
-        fetchList(this.listQuery).then(response => {
+        search(this.listQuery).then(response => {
           this.listLoading = false;
-          this.list = response.data.list;
+          this.list = response.data.data;
           this.total = response.data.total;
           this.totalPage = response.data.totalPage;
           this.pageSize = response.data.pageSize;
@@ -209,26 +202,26 @@
       handleFactoryStatusChange(index, row) {
         var data = new URLSearchParams();
         data.append("ids", row.id);
-        data.append("factoryStatus", row.factoryStatus);
+        data.append("isFactory", row.isFactory);
         updateFactoryStatus(data).then(response => {
+          console.log(response)
           this.$message({
             message: '修改成功',
             type: 'success',
             duration: 1000
           });
         }).catch(error => {
-          if (row.factoryStatus === 0) {
-            row.factoryStatus = 1;
+          if (row.isFactory === 0) {
+            row.isFactory = 1;
           } else {
-            row.factoryStatus = 0;
+            row.isFactory = 0;
           }
         });
       },
       handleShowStatusChange(index, row) {
         let data = new URLSearchParams();
-        ;
         data.append("ids", row.id);
-        data.append("showStatus", row.showStatus);
+        data.append("isShow", row.isShow);
         updateShowStatus(data).then(response => {
           this.$message({
             message: '修改成功',
@@ -236,10 +229,10 @@
             duration: 1000
           });
         }).catch(error => {
-          if (row.showStatus === 0) {
-            row.showStatus = 1;
+          if (row.isShow === 0) {
+            row.isShow = 1;
           } else {
-            row.showStatus = 0;
+            row.isShow = 0;
           }
         });
       },
@@ -285,7 +278,7 @@
         }
         let data = new URLSearchParams();
         data.append("ids", ids);
-        data.append("showStatus", showStatus);
+        data.append("isShow", showStatus);
         updateShowStatus(data).then(response => {
           this.getList();
           this.$message({

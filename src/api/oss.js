@@ -5,3 +5,11 @@ export function policy() {
     method:'get',
   })
 }
+
+export function upload(data) {
+  return request({
+    url: '/file/upload',
+    method: 'post',
+    data: data
+  })
+}

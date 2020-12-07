@@ -207,17 +207,10 @@
       },
       handleSearchList() {
         this.listQuery.pageNum = 1;
-        const keyword = this.listQuery.keyword;
-        if (keyword == null || keyword === '') {
-          this.getList()
-        } else {
-          this.listLoading = true;
-          searchList(this.listQuery).then(response => {
-            this.listLoading = false;
-            this.list = response.data.data;
-            this.total = response.data.total;
-          });
+        if (this.listQuery.keyword === '') {
+          this.listQuery.keyword = null;
         }
+        this.getList();
       },
       handleSizeChange(val) {
         this.listQuery.pageNum = 1;
@@ -333,11 +326,21 @@
       },
       getList() {
         this.listLoading = true;
-        fetchList(this.listQuery).then(response => {
-          this.listLoading = false;
-          this.list = response.data.data;
-          this.total = response.data.total;
-        });
+        if (this.listQuery.keyword === null) {
+          console.log("分页获取")
+          fetchList(this.listQuery).then(response => {
+            this.listLoading = false;
+            this.list = response.data.data;
+            this.total = response.data.total;
+          });
+        } else {
+          console.log("分页搜索")
+          searchList(this.listQuery).then(response => {
+            this.listLoading = false;
+            this.list = response.data.data;
+            this.total = response.data.total;
+          });
+        }
       },
       getAllActiveRoleList() {
         fetchAllRoleList().then(response => {

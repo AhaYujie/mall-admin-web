@@ -1,15 +1,14 @@
 <template> 
   <div>
     <el-upload
-      :action="useOss?ossUploadUrl:minioUploadUrl"
-      :data="useOss?dataObj:null"
+      action=""
+      :http-request="upload"
       list-type="picture"
       :multiple="false" :show-file-list="showFileList"
       :file-list="fileList"
-      :before-upload="beforeUpload"
       :on-remove="handleRemove"
-      :on-success="handleUploadSuccess"
-      :on-preview="handlePreview">
+      :on-preview="handlePreview"
+      v-loading="loading">
       <el-button size="small" type="primary">点击上传</el-button>
       <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过10MB</div>
     </el-upload>
@@ -19,7 +18,7 @@
   </div>
 </template>
 <script>
-  import {policy} from '@/api/oss'
+  import {policy, upload} from '@/api/oss'
 
   export default {
     name: 'singleUpload',
@@ -66,9 +65,31 @@
         useOss:true, //使用oss->true;使用MinIO->false
         ossUploadUrl:'http://macro-oss.oss-cn-shenzhen.aliyuncs.com',
         minioUploadUrl:'http://localhost:8080/minio/upload',
+        loading: false,
       };
     },
     methods: {
+      upload(param) {
+        this.loading = true
+        const form = new FormData()
+        form.append('file', param.file)
+        upload(form).then(response => {
+          console.log(response)
+          this.showFileList = true;
+          this.fileList.pop();
+          this.fileList.push({name: param.file.name, url: response.data.url});
+          this.emitInput(this.fileList[0].url);
+        }).catch(err => {
+          console.log(err)
+          this.$message({
+            message: '上传失败',
+            type: 'error',
+            duration: 1000
+          });
+        }).finally(() => {
+          this.loading = false
+        })
+      },
       emitInput(val) {
         this.$emit('input', val)
       },
@@ -86,6 +107,7 @@
         }
         return new Promise((resolve, reject) => {
           policy().then(response => {
+            console.log(response)
             _self.dataObj.policy = response.data.policy;
             _self.dataObj.signature = response.data.signature;
             _self.dataObj.ossaccessKeyId = response.data.accessKeyId;
@@ -101,6 +123,7 @@
         })
       },
       handleUploadSuccess(res, file) {
+        console.log("handleUploadSuccess")
         this.showFileList = true;
         this.fileList.pop();
         let url = this.dataObj.host + '/' + this.dataObj.dir + '/' + file.name;
@@ -109,6 +132,7 @@
           url = res.data.url;
         }
         this.fileList.push({name: file.name, url: url});
+        console.log(this.fileList)
         this.emitInput(this.fileList[0].url);
       }
     }

@@ -1,13 +1,11 @@
 <template> 
   <div>
     <el-upload
-      :action="useOss?ossUploadUrl:minioUploadUrl"
-      :data="useOss?dataObj:null"
+      action=""
+      :http-request="upload"
       list-type="picture-card"
       :file-list="fileList"
-      :before-upload="beforeUpload"
       :on-remove="handleRemove"
-      :on-success="handleUploadSuccess"
       :on-preview="handlePreview"
       :limit="maxCount"
       :on-exceed="handleExceed"
@@ -20,7 +18,7 @@
   </div>
 </template>
 <script>
-  import {policy} from '@/api/oss'
+  import {policy, upload} from '@/api/oss'
 
   export default {
     name: 'multiUpload',
@@ -28,9 +26,9 @@
       //图片属性数组
       value: Array,
       //最大上传图片数量
-      maxCount:{
-        type:Number,
-        default:5
+      maxCount: {
+        type: Number,
+        default: 5
       }
     },
     data() {
@@ -44,25 +42,25 @@
           host: ''
         },
         dialogVisible: false,
-        dialogImageUrl:null,
-        useOss:true, //使用oss->true;使用MinIO->false
-        ossUploadUrl:'http://macro-oss.oss-cn-shenzhen.aliyuncs.com',
-        minioUploadUrl:'http://localhost:8080/minio/upload',
+        dialogImageUrl: null,
+        useOss: true, //使用oss->true;使用MinIO->false
+        ossUploadUrl: 'http://macro-oss.oss-cn-shenzhen.aliyuncs.com',
+        minioUploadUrl: 'http://localhost:8080/minio/upload',
       };
     },
     computed: {
       fileList() {
-        let fileList=[];
-        for(let i=0;i<this.value.length;i++){
-          fileList.push({url:this.value[i]});
+        let fileList = [];
+        for (let i = 0; i < this.value.length; i++) {
+          fileList.push({url: this.value[i]});
         }
         return fileList;
       }
     },
     methods: {
       emitInput(fileList) {
-        let value=[];
-        for(let i=0;i<fileList.length;i++){
+        let value = [];
+        for (let i = 0; i < fileList.length; i++) {
           value.push(fileList[i].url);
         }
         this.$emit('input', value)
@@ -72,11 +70,11 @@
       },
       handlePreview(file) {
         this.dialogVisible = true;
-        this.dialogImageUrl=file.url;
+        this.dialogImageUrl = file.url;
       },
       beforeUpload(file) {
         let _self = this;
-        if(!this.useOss){
+        if (!this.useOss) {
           //不使用oss不需要获取策略
           return true;
         }
@@ -97,19 +95,37 @@
       },
       handleUploadSuccess(res, file) {
         let url = this.dataObj.host + '/' + this.dataObj.dir + '/' + file.name;
-        if(!this.useOss){
+        if (!this.useOss) {
           //不使用oss直接获取图片路径
           url = res.data.url;
         }
-        this.fileList.push({name: file.name,url:url});
+        this.fileList.push({name: file.name, url: url});
         this.emitInput(this.fileList);
       },
       handleExceed(files, fileList) {
         this.$message({
-          message: '最多只能上传'+this.maxCount+'张图片',
+          message: '最多只能上传' + this.maxCount + '张图片',
           type: 'warning',
-          duration:1000
+          duration: 1000
         });
+      },
+      upload(param) {
+        this.loading = true
+        const form = new FormData()
+        form.append('file', param.file)
+        upload(form).then(response => {
+          this.fileList.push({name: param.file.name, url: response.data.url});
+          this.emitInput(this.fileList);
+        }).catch(err => {
+          console.log(err)
+          this.$message({
+            message: '上传失败',
+            type: 'error',
+            duration: 1000
+          });
+        }).finally(() => {
+          this.loading = false
+        })
       },
     }
   }

@@ -24,13 +24,13 @@
         <el-input v-model.number="brand.sort"></el-input>
       </el-form-item>
       <el-form-item label="是否显示：">
-        <el-radio-group v-model="brand.showStatus">
+        <el-radio-group v-model="brand.isShow">
           <el-radio :label="1">是</el-radio>
           <el-radio :label="0">否</el-radio>
         </el-radio-group>
       </el-form-item>
       <el-form-item label="品牌制造商：">
-        <el-radio-group v-model="brand.factoryStatus">
+        <el-radio-group v-model="brand.isFactory">
           <el-radio :label="1">是</el-radio>
           <el-radio :label="0">否</el-radio>
         </el-radio-group>
@@ -45,19 +45,20 @@
 <script>
   import {createBrand, getBrand, updateBrand} from '@/api/brand'
   import SingleUpload from '@/components/Upload/singleUpload'
-  const defaultBrand={
+
+  const defaultBrand = {
     bigPic: '',
     brandStory: '',
-    factoryStatus: 0,
+    isFactory: 0,
     firstLetter: '',
     logo: '',
     name: '',
-    showStatus: 0,
+    isShow: 0,
     sort: 0
   };
   export default {
     name: 'BrandDetail',
-    components:{SingleUpload},
+    components: {SingleUpload},
     props: {
       isEdit: {
         type: Boolean,
@@ -66,15 +67,15 @@
     },
     data() {
       return {
-        brand:Object.assign({}, defaultBrand),
+        brand: Object.assign({}, defaultBrand),
         rules: {
           name: [
             {required: true, message: '请输入品牌名称', trigger: 'blur'},
             {min: 2, max: 140, message: '长度在 2 到 140 个字符', trigger: 'blur'}
           ],
-          logo: [
-            {required: true, message: '请输入品牌logo', trigger: 'blur'}
-          ],
+          // logo: [
+          //   {required: true, message: '请输入品牌logo', trigger: 'blur'}
+          // ],
           sort: [
             {type: 'number', message: '排序必须为数字'}
           ],
@@ -86,8 +87,8 @@
         getBrand(this.$route.query.id).then(response => {
           this.brand = response.data;
         });
-      }else{
-        this.brand = Object.assign({},defaultBrand);
+      } else {
+        this.brand = Object.assign({}, defaultBrand);
       }
     },
     methods: {
@@ -99,24 +100,25 @@
               cancelButtonText: '取消',
               type: 'warning'
             }).then(() => {
+              console.log(this.brand)
               if (this.isEdit) {
                 updateBrand(this.$route.query.id, this.brand).then(response => {
                   this.$refs[formName].resetFields();
                   this.$message({
                     message: '修改成功',
                     type: 'success',
-                    duration:1000
+                    duration: 1000
                   });
                   this.$router.back();
                 });
               } else {
                 createBrand(this.brand).then(response => {
                   this.$refs[formName].resetFields();
-                  this.brand = Object.assign({},defaultBrand);
+                  this.brand = Object.assign({}, defaultBrand);
                   this.$message({
                     message: '提交成功',
                     type: 'success',
-                    duration:1000
+                    duration: 1000
                   });
                 });
               }
@@ -126,7 +128,7 @@
             this.$message({
               message: '验证失败',
               type: 'error',
-              duration:1000
+              duration: 1000
             });
             return false;
           }
@@ -134,7 +136,7 @@
       },
       resetForm(formName) {
         this.$refs[formName].resetFields();
-        this.brand = Object.assign({},defaultBrand);
+        this.brand = Object.assign({}, defaultBrand);
       }
     }
   }

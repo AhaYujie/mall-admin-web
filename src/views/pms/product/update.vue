@@ -1,11 +1,11 @@
 <template> 
-  <product-detail :is-edit='true'></product-detail>
+  <update-product-detail></update-product-detail>
 </template>
 <script>
-  import ProductDetail from './components/ProductDetail'
+  import UpdateProductDetail from './components/UpdateProductDetail.vue'
   export default {
     name: 'updateProduct',
-    components: { ProductDetail }
+    components: { UpdateProductDetail }
   }
 </script>
 <style>

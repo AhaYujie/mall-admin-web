@@ -135,7 +135,7 @@
         <el-table-column label="编号" width="100" align="center">
           <template slot-scope="scope">{{scope.row.id}}</template>
         </el-table-column>
-        <el-table-column label="商品图片" width="120" align="center">
+        <el-table-column label="商品图片" width="200" align="center">
           <template slot-scope="scope"><img style="height: 80px" :src="scope.row.pic"></template>
         </el-table-column>
         <el-table-column label="商品名称" align="center">
@@ -201,29 +201,9 @@
             </p>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="160" align="center">
+        <el-table-column label="操作" align="center">
           <template slot-scope="scope">
-            <p>
-              <el-button
-                size="mini"
-                @click="handleShowProduct(scope.$index, scope.row)">查看
-              </el-button>
-              <el-button
-                size="mini"
-                @click="handleUpdateProduct(scope.$index, scope.row)">编辑
-              </el-button>
-            </p>
-            <p>
-              <el-button
-                size="mini"
-                @click="handleShowLog(scope.$index, scope.row)">日志
-              </el-button>
-              <el-button
-                size="mini"
-                type="danger"
-                @click="handleDelete(scope.$index, scope.row)">删除
-              </el-button>
-            </p>
+            <el-button size="mini" @click="handleUpdateProduct(scope.$index, scope.row)">编辑</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -321,6 +301,7 @@
     </el-dialog>
   </div>
 </template>
+
 <script>
   import {
     fetchList,
@@ -373,7 +354,7 @@
             value: "publishOff"
           },
           {
-            label: "设为推荐",
+            label: "推荐商品",
             value: "recommendOn"
           },
           {
@@ -388,14 +369,6 @@
             label: "取消新品",
             value: "newOff"
           },
-          {
-            label: "转移到分类",
-            value: "transferCategory"
-          },
-          {
-            label: "移入回收站",
-            value: "recycle"
-          }
         ],
         operateType: null,
         listQuery: Object.assign({}, defaultListQuery),
@@ -466,8 +439,7 @@
       this.getBrandList();
       this.getProductCateList();
     },
-    watch: {
-    },
+    watch: {},
     filters: {
       verifyStatusFilter(value) {
         if (value === 1) {
@@ -548,8 +520,7 @@
       handleProductCateSelectChange(value) {
         if (value !== null && value.length > 0) {
           this.listQuery.productCategoryId = value[value.length - 1];
-        }
-        else {
+        } else {
           this.listQuery.productCategoryId = null;
         }
       },
@@ -651,11 +622,6 @@
             case this.operates[5].value:
               this.updateNewStatus(0, ids);
               break;
-            case this.operates[6].value:
-              break;
-            case this.operates[7].value:
-              this.updateDeleteStatus(1, ids);
-              break;
             default:
               break;
           }
@@ -687,34 +653,17 @@
       handleRecommendStatusChange(index, row) {
         let ids = [];
         ids.push(row.id);
-        this.updateRecommendStatus(row.isRecommed, ids);
+        this.updateRecommendStatus(row.isRecommend, ids);
       },
       handleResetSearch() {
         this.selectProductCate = [];
         this.listQuery = Object.assign({}, defaultListQuery);
       },
-      handleDelete(index, row) {
-        this.$confirm('是否要进行删除操作?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-          let ids = [];
-          ids.push(row.id);
-          this.updateDeleteStatus(1, ids);
-        });
-      },
       handleUpdateProduct(index, row) {
         this.$router.push({path: '/pms/updateProduct', query: {id: row.id}});
       },
-      handleShowProduct(index, row) {
-        console.log("handleShowProduct", row);
-      },
       handleShowVerifyDetail(index, row) {
         console.log("handleShowVerifyDetail", row);
-      },
-      handleShowLog(index, row) {
-        console.log("handleShowLog", row);
       },
       updatePublishStatus(publishStatus, ids) {
         let params = new URLSearchParams();
@@ -768,6 +717,5 @@
     }
   }
 </script>
+
 <style></style>
-
-

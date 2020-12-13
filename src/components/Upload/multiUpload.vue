@@ -18,7 +18,7 @@
   </div>
 </template>
 <script>
-  import {policy, upload} from '@/api/oss'
+  import {upload} from '@/api/oss'
 
   export default {
     name: 'multiUpload',
@@ -33,19 +33,8 @@
     },
     data() {
       return {
-        dataObj: {
-          policy: '',
-          signature: '',
-          key: '',
-          ossaccessKeyId: '',
-          dir: '',
-          host: ''
-        },
         dialogVisible: false,
         dialogImageUrl: null,
-        useOss: true, //使用oss->true;使用MinIO->false
-        ossUploadUrl: 'http://macro-oss.oss-cn-shenzhen.aliyuncs.com',
-        minioUploadUrl: 'http://localhost:8080/minio/upload',
       };
     },
     computed: {
@@ -72,36 +61,6 @@
         this.dialogVisible = true;
         this.dialogImageUrl = file.url;
       },
-      beforeUpload(file) {
-        let _self = this;
-        if (!this.useOss) {
-          //不使用oss不需要获取策略
-          return true;
-        }
-        return new Promise((resolve, reject) => {
-          policy().then(response => {
-            _self.dataObj.policy = response.data.policy;
-            _self.dataObj.signature = response.data.signature;
-            _self.dataObj.ossaccessKeyId = response.data.accessKeyId;
-            _self.dataObj.key = response.data.dir + '/${filename}';
-            _self.dataObj.dir = response.data.dir;
-            _self.dataObj.host = response.data.host;
-            resolve(true)
-          }).catch(err => {
-            console.log(err)
-            reject(false)
-          })
-        })
-      },
-      handleUploadSuccess(res, file) {
-        let url = this.dataObj.host + '/' + this.dataObj.dir + '/' + file.name;
-        if (!this.useOss) {
-          //不使用oss直接获取图片路径
-          url = res.data.url;
-        }
-        this.fileList.push({name: file.name, url: url});
-        this.emitInput(this.fileList);
-      },
       handleExceed(files, fileList) {
         this.$message({
           message: '最多只能上传' + this.maxCount + '张图片',
@@ -117,7 +76,6 @@
           this.fileList.push({name: param.file.name, url: response.data.url});
           this.emitInput(this.fileList);
         }).catch(err => {
-          console.log(err)
           this.$message({
             message: '上传失败',
             type: 'error',

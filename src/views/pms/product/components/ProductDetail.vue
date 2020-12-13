@@ -85,8 +85,6 @@
         showStatus: [true, false, false, false]
       }
     },
-    created() {
-    },
     methods: {
       hideAll() {
         for (let i = 0; i < this.showStatus.length; i++) {
@@ -113,6 +111,13 @@
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
+          for (let i = 0; i < this.product.skus.length; i++) {
+            let images = []
+            for (let j = 0; j < this.product.skus[i].images.length; j++) {
+              images.push({image: this.product.skus[i].images[j]})
+            }
+            this.product.skus[i].images = images
+          }
           createProduct(this.product).then(response => {
             this.$message({
               type: 'success',

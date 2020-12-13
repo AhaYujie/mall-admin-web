@@ -80,6 +80,22 @@ export function updateParam(id, data) {
   })
 }
 
+export function updateSpecification(id, data) {
+  return request({
+    url: '/product/update/specification/' + id,
+    method: 'post',
+    data: data
+  })
+}
+
+export function updateSku(id, data) {
+  return request({
+    url: '/product/update/sku/' + id,
+    method: 'post',
+    data: data
+  })
+}
+
 export function getProduct(id) {
   return request({
     url: '/product/info/' + id,

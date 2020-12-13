@@ -196,8 +196,6 @@
         },
       };
     },
-    created() {
-    },
     filters: {
       valueTypeFilter(value) {
         if (value === 0) {

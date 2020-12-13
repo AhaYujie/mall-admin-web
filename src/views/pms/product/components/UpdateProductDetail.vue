@@ -26,6 +26,7 @@
     </update-product-param>
     <update-product-sku
       v-show="showStatus[3]"
+      v-model="product"
       @finishCommit="finishCommit"
       @prevStep="prevStep">
     </update-product-sku>
@@ -94,6 +95,7 @@
     created() {
       getProduct(this.$route.query.id).then(response => {
         this.product = response.data
+        console.log(this.product)
       })
     },
     methods: {

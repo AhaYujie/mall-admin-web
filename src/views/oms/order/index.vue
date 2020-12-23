@@ -20,20 +20,11 @@
       </div>
       <div style="margin-top: 15px">
         <el-form :inline="true" :model="listQuery" size="small" label-width="140px">
-          <el-form-item label="输入搜索：">
-            <el-input v-model="listQuery.orderSn" class="input-width" placeholder="订单编号"></el-input>
+          <el-form-item label="订单编号：">
+            <el-input v-model="listQuery.orderSn" class="input-width" placeholder="请输入订单编号"></el-input>
           </el-form-item>
-          <el-form-item label="收货人：">
-            <el-input v-model="listQuery.receiverKeyword" class="input-width" placeholder="收货人姓名/手机号码"></el-input>
-          </el-form-item>
-          <el-form-item label="提交时间：">
-            <el-date-picker
-              class="input-width"
-              v-model="listQuery.createTime"
-              value-format="yyyy-MM-dd"
-              type="date"
-              placeholder="请选择时间">
-            </el-date-picker>
+          <el-form-item label="会员用户名：">
+            <el-input v-model="listQuery.memberUsername" class="input-width" placeholder="请输入会员用户名"></el-input>
           </el-form-item>
           <el-form-item label="订单状态：">
             <el-select v-model="listQuery.status" class="input-width" placeholder="全部" clearable>
@@ -79,13 +70,13 @@
         <el-table-column label="编号" width="80" align="center">
           <template slot-scope="scope">{{scope.row.id}}</template>
         </el-table-column>
-        <el-table-column label="订单编号" width="180" align="center">
+        <el-table-column label="订单编号" width="250" align="center">
           <template slot-scope="scope">{{scope.row.orderSn}}</template>
         </el-table-column>
         <el-table-column label="提交时间" width="180" align="center">
           <template slot-scope="scope">{{scope.row.createTime | formatCreateTime}}</template>
         </el-table-column>
-        <el-table-column label="用户账号" align="center">
+        <el-table-column label="会员用户名" align="center">
           <template slot-scope="scope">{{scope.row.memberUsername}}</template>
         </el-table-column>
         <el-table-column label="订单金额" width="120" align="center">
@@ -100,29 +91,18 @@
         <el-table-column label="订单状态" width="120" align="center">
           <template slot-scope="scope">{{scope.row.status | formatStatus}}</template>
         </el-table-column>
-        <el-table-column label="操作" width="200" align="center">
+        <el-table-column label="操作" width="150" align="center">
           <template slot-scope="scope">
             <el-button
               size="mini"
               @click="handleViewOrder(scope.$index, scope.row)"
-            >查看订单</el-button>
-            <el-button
-              size="mini"
-              @click="handleCloseOrder(scope.$index, scope.row)"
-              v-show="scope.row.status===0">关闭订单</el-button>
+            >查看订单
+            </el-button>
             <el-button
               size="mini"
               @click="handleDeliveryOrder(scope.$index, scope.row)"
-              v-show="scope.row.status===1">订单发货</el-button>
-            <el-button
-              size="mini"
-              @click="handleViewLogistics(scope.$index, scope.row)"
-              v-show="scope.row.status===2||scope.row.status===3">订单跟踪</el-button>
-            <el-button
-              size="mini"
-              type="danger"
-              @click="handleDeleteOrder(scope.$index, scope.row)"
-              v-show="scope.row.status===4">删除订单</el-button>
+              v-show="scope.row.status===1">订单发货
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -159,42 +139,24 @@
         :total="total">
       </el-pagination>
     </div>
-    <el-dialog
-      title="关闭订单"
-      :visible.sync="closeOrder.dialogVisible" width="30%">
-      <span style="vertical-align: top">操作备注：</span>
-      <el-input
-        style="width: 80%"
-        type="textarea"
-        :rows="5"
-        placeholder="请输入内容"
-        v-model="closeOrder.content">
-      </el-input>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="closeOrder.dialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="handleCloseOrderConfirm">确 定</el-button>
-      </span>
-    </el-dialog>
-    <logistics-dialog v-model="logisticsDialogVisible"></logistics-dialog>
   </div>
 </template>
+
 <script>
-  import {fetchList,closeOrder,deleteOrder} from '@/api/order'
+  import {fetchList} from '@/api/order'
   import {formatDate} from '@/utils/date';
-  import LogisticsDialog from '@/views/oms/order/components/logisticsDialog';
+
   const defaultListQuery = {
     pageNum: 1,
     pageSize: 10,
     orderSn: null,
-    receiverKeyword: null,
     status: null,
     orderType: null,
     sourceType: null,
-    createTime: null,
+    memberUsername: null
   };
   export default {
     name: "orderList",
-    components:{LogisticsDialog},
     data() {
       return {
         listQuery: Object.assign({}, defaultListQuery),
@@ -203,11 +165,6 @@
         total: null,
         operateType: null,
         multipleSelection: [],
-        closeOrder:{
-          dialogVisible:false,
-          content:null,
-          orderIds:[]
-        },
         statusOptions: [
           {
             label: '待付款',
@@ -222,13 +179,33 @@
             value: 2
           },
           {
-            label: '已完成',
+            label: '待评价',
             value: 3
           },
           {
-            label: '已关闭',
+            label: '交易完成',
             value: 4
-          }
+          },
+          {
+            label: '申请仅退款',
+            value: 5
+          },
+          {
+            label: '申请退货退款',
+            value: 6
+          },
+          {
+            label: '仅退款中',
+            value: 7
+          },
+          {
+            label: '退货退款中',
+            value: 8
+          },
+          {
+            label: '交易关闭',
+            value: 9
+          },
         ],
         orderTypeOptions: [
           {
@@ -254,17 +231,8 @@
           {
             label: "批量发货",
             value: 1
-          },
-          {
-            label: "关闭订单",
-            value: 2
-          },
-          {
-            label: "删除订单",
-            value: 3
           }
         ],
-        logisticsDialogVisible:false
       }
     },
     created() {
@@ -280,30 +248,38 @@
           return '支付宝';
         } else if (value === 2) {
           return '微信';
-        } else {
+        } else if (value === 0) {
           return '未支付';
         }
       },
       formatSourceType(value) {
         if (value === 1) {
           return 'APP订单';
-        } else {
+        } else if (value === 0) {
           return 'PC订单';
         }
       },
       formatStatus(value) {
-        if (value === 1) {
+        if (value === 0) {
+          return '待付款'
+        } else if (value === 1) {
           return '待发货';
         } else if (value === 2) {
           return '已发货';
         } else if (value === 3) {
-          return '已完成';
+          return '待评价';
         } else if (value === 4) {
-          return '已关闭';
+          return '交易完成';
         } else if (value === 5) {
-          return '无效订单';
-        } else {
-          return '待付款';
+          return '申请仅退款';
+        } else if (value === 6) {
+          return '申请退货退款';
+        } else if (value === 7) {
+          return '仅退款中';
+        } else if (value === 8) {
+          return '退货退款中';
+        } else if (value === 9) {
+          return '交易关闭';
         }
       },
     },
@@ -315,30 +291,18 @@
         this.listQuery.pageNum = 1;
         this.getList();
       },
-      handleSelectionChange(val){
+      handleSelectionChange(val) {
         this.multipleSelection = val;
       },
-      handleViewOrder(index, row){
-        this.$router.push({path:'/oms/orderDetail',query:{id:row.id}})
+      handleViewOrder(index, row) {
+        this.$router.push({path: '/oms/orderDetail', query: {id: row.id}})
       },
-      handleCloseOrder(index, row){
-        this.closeOrder.dialogVisible=true;
-        this.closeOrder.orderIds=[row.id];
-      },
-      handleDeliveryOrder(index, row){
+      handleDeliveryOrder(index, row) {
         let listItem = this.covertOrder(row);
-        this.$router.push({path:'/oms/deliverOrderList',query:{list:[listItem]}})
+        this.$router.push({path: '/oms/deliverOrderList', query: {list: [listItem]}})
       },
-      handleViewLogistics(index, row){
-        this.logisticsDialogVisible=true;
-      },
-      handleDeleteOrder(index, row){
-        let ids=[];
-        ids.push(row.id);
-        this.deleteOrder(ids);
-      },
-      handleBatchOperate(){
-        if(this.multipleSelection==null||this.multipleSelection.length<1){
+      handleBatchOperate() {
+        if (this.multipleSelection == null || this.multipleSelection.length < 1) {
           this.$message({
             message: '请选择要操作的订单',
             type: 'warning',
@@ -346,15 +310,15 @@
           });
           return;
         }
-        if(this.operateType===1){
+        if (this.operateType === 1) {
           //批量发货
-          let list=[];
-          for(let i=0;i<this.multipleSelection.length;i++){
-            if(this.multipleSelection[i].status===1){
+          let list = [];
+          for (let i = 0; i < this.multipleSelection.length; i++) {
+            if (this.multipleSelection[i].status === 1) {
               list.push(this.covertOrder(this.multipleSelection[i]));
             }
           }
-          if(list.length===0){
+          if (list.length === 0) {
             this.$message({
               message: '选中订单中没有可以发货的订单',
               type: 'warning',
@@ -362,102 +326,60 @@
             });
             return;
           }
-          this.$router.push({path:'/oms/deliverOrderList',query:{list:list}})
-        }else if(this.operateType===2){
+          this.$router.push({path: '/oms/deliverOrderList', query: {list: list}})
+        } else if (this.operateType === 2) {
           //关闭订单
-          this.closeOrder.orderIds=[];
-          for(let i=0;i<this.multipleSelection.length;i++){
+          this.closeOrder.orderIds = [];
+          for (let i = 0; i < this.multipleSelection.length; i++) {
             this.closeOrder.orderIds.push(this.multipleSelection[i].id);
           }
-          this.closeOrder.dialogVisible=true;
-        }else if(this.operateType===3){
+          this.closeOrder.dialogVisible = true;
+        } else if (this.operateType === 3) {
           //删除订单
-          let ids=[];
-          for(let i=0;i<this.multipleSelection.length;i++){
+          let ids = [];
+          for (let i = 0; i < this.multipleSelection.length; i++) {
             ids.push(this.multipleSelection[i].id);
           }
           this.deleteOrder(ids);
         }
       },
-      handleSizeChange(val){
+      handleSizeChange(val) {
         this.listQuery.pageNum = 1;
         this.listQuery.pageSize = val;
         this.getList();
       },
-      handleCurrentChange(val){
+      handleCurrentChange(val) {
         this.listQuery.pageNum = val;
         this.getList();
       },
-      handleCloseOrderConfirm() {
-        if (this.closeOrder.content == null || this.closeOrder.content === '') {
-          this.$message({
-            message: '操作备注不能为空',
-            type: 'warning',
-            duration: 1000
-          });
-          return;
-        }
-        let params = new URLSearchParams();
-        params.append('ids', this.closeOrder.orderIds);
-        params.append('note', this.closeOrder.content);
-        closeOrder(params).then(response=>{
-          this.closeOrder.orderIds=[];
-          this.closeOrder.dialogVisible=false;
-          this.getList();
-          this.$message({
-            message: '修改成功',
-            type: 'success',
-            duration: 1000
-          });
-        });
-      },
       getList() {
         this.listLoading = true;
-        fetchList(this.listQuery).then(response => {
+        fetchList(this.listQuery, this.listQuery.pageNum, this.listQuery.pageSize).then(response => {
           this.listLoading = false;
-          this.list = response.data.list;
+          this.list = response.data.data;
           this.total = response.data.total;
         });
       },
-      deleteOrder(ids){
-        this.$confirm('是否要进行该删除操作?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-          let params = new URLSearchParams();
-          params.append("ids",ids);
-          deleteOrder(params).then(response=>{
-            this.$message({
-              message: '删除成功！',
-              type: 'success',
-              duration: 1000
-            });
-            this.getList();
-          });
-        })
-      },
-      covertOrder(order){
-        let address=order.receiverProvince+order.receiverCity+order.receiverRegion+order.receiverDetailAddress;
-        let listItem={
-          orderId:order.id,
-          orderSn:order.orderSn,
-          receiverName:order.receiverName,
-          receiverPhone:order.receiverPhone,
-          receiverPostCode:order.receiverPostCode,
-          address:address,
-          deliveryCompany:null,
-          deliverySn:null
+      covertOrder(order) {
+        let address = order.receiverProvince + order.receiverCity + order.receiverRegion + order.receiverDetailAddress;
+        let listItem = {
+          orderId: order.id,
+          orderSn: order.orderSn,
+          receiverName: order.receiverName,
+          receiverPhone: order.receiverPhone,
+          receiverPostCode: order.receiverPostCode,
+          address: address,
+          deliveryCompany: null,
+          deliverySn: null
         };
         return listItem;
       }
     }
   }
 </script>
+
 <style scoped>
   .input-width {
     width: 203px;
   }
 </style>
-
-

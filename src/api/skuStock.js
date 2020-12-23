@@ -7,11 +7,3 @@ export function fetchList(pid, params) {
     params: params
   })
 }
-
-export function update(pid, data) {
-  return request({
-    url: '/sku/update/' + pid,
-    method: 'post',
-    data: data
-  })
-}

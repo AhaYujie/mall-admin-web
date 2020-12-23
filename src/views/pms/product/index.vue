@@ -309,10 +309,10 @@
     updateDeleteStatus,
     updateNewStatus,
     updateRecommendStatus,
-    updatePublishStatus
+    updatePublishStatus,
+    updateSku
   } from '@/api/product'
-  import {fetchList as fetchSkuStockList, update as updateSkuStockList} from '@/api/skuStock'
-  import {fetchList as fetchProductAttrList} from '@/api/productAttr'
+  import {fetchList as fetchSkuStockList} from '@/api/skuStock'
   import {fetchList as fetchBrandList} from '@/api/brand'
   import {fetchListWithChildren, fetchProcutCateList} from '@/api/productCate'
 
@@ -553,14 +553,19 @@
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-          updateSkuStockList(this.editSkuInfo.productId, this.editSkuInfo.stockList).then(response => {
+          let skus = []
+          for (let i = 0; i < this.editSkuInfo.stockList.length; i++) {
+            let tmp = this.editSkuInfo.stockList[i]
+            let sku = {id: tmp.id, price: tmp.price, stock: tmp.stock, lowStock: tmp.lowStock}
+            skus.push(sku)
+          }
+          updateSku(this.editSkuInfo.productId, {skus: skus}).then(response => {
             this.$message({
               message: '修改成功',
               type: 'success',
               duration: 1000
             });
-            this.editSkuInfo.dialogVisible = false;
-          });
+          })
         });
       },
       handleSearchList() {

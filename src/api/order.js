@@ -22,3 +22,11 @@ export function getOrderDetail(id) {
     method: 'get'
   });
 }
+
+export function submitOrder(data) {
+  return request({
+    url: '/order/create',
+    method: 'post',
+    data: data
+  });
+}

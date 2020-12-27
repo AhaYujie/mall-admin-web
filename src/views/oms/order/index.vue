@@ -59,6 +59,7 @@
     <el-card class="operate-container" shadow="never">
       <i class="el-icon-tickets"></i>
       <span>数据列表</span>
+      <el-button class="btn-add" @click="handleSubmitOrder()" size="mini">创建订单</el-button>
     </el-card>
     <div class="table-container">
       <el-table ref="orderTable"
@@ -278,6 +279,9 @@
           this.total = response.data.total;
         });
       },
+      handleSubmitOrder() {
+        this.$router.push({path: '/oms/submitOrder'})
+      }
     }
   }
 </script>
